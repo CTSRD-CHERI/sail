@@ -7,11 +7,11 @@ Require Import String.
 Require Import List.
 Import List.ListNotations.
 
-Definition MEMr {regval a e} (addr : mword a) size `{ArithFact (size >= 0)}            : monad regval (mword (8 * size)) e := read_mem Read_plain a addr size.
-Definition MEMr_reserve {regval a e} (addr : mword a) size `{ArithFact (size >= 0)}    : monad regval (mword (8 * size)) e := read_mem Read_reserve a addr size.
+Definition MEMr {regval a e} (addr : mword a) size `{ArithFact (size >=? 0)}            : monad regval (mword (8 * size)) e := read_mem Read_plain a addr size.
+Definition MEMr_reserve {regval a e} (addr : mword a) size `{ArithFact (size >=? 0)}    : monad regval (mword (8 * size)) e := read_mem Read_reserve a addr size.
 Definition MEM_sync {rv e} (_:unit) : monad rv unit e := barrier (Barrier_MIPS_SYNC tt).
 
-Definition MEMr_tagged {rv a e} (addr : mword a) size (allowTag : bool) `{ArithFact (size > 0)} : monad rv (bool * mword (size * 8)) e :=
+Definition MEMr_tagged {rv a e} (addr : mword a) size (allowTag : bool) `{ArithFact (size >? 0)} : monad rv (bool * mword (size * 8)) e :=
   (if allowTag then
     read_memt Read_plain addr size
   else
@@ -19,7 +19,7 @@ Definition MEMr_tagged {rv a e} (addr : mword a) size (allowTag : bool) `{ArithF
   maybe_fail "bool_of_bitU" (bool_of_bitU t) >>= fun t =>
   returnm (t, v).
 
-Definition MEMr_tagged_reserve {rv a e} (addr : mword a) size (allowTag : bool) `{ArithFact (size > 0)} : monad rv (bool * mword (size * 8)) e :=
+Definition MEMr_tagged_reserve {rv a e} (addr : mword a) size (allowTag : bool) `{ArithFact (size >? 0)} : monad rv (bool * mword (size * 8)) e :=
   (if allowTag then
      read_memt Read_plain addr size
    else
@@ -55,7 +55,7 @@ Definition write_ram {rv e} m size (_ : mword m) (addr : mword m) (data : mword 
   MEMea addr size >>
   MEMval addr size data.
 
-Definition read_ram {rv e} m size `{ArithFact (size >= 0)} (_ : mword m) (addr : mword m) : monad rv (mword (8 * size)) e := MEMr addr size.
+Definition read_ram {rv e} m size `{ArithFact (size >=? 0)} (_ : mword m) (addr : mword m) : monad rv (mword (8 * size)) e := MEMr addr size.
 (*
 Definition string_of_bits bs := string_of_bv (bits_of bs).
 Definition string_of_int := show
@@ -85,14 +85,14 @@ Definition undefined_string {rv e} (_:unit) : monad rv string e := returnm ""%st
 Definition undefined_unit {rv e} (_:unit) : monad rv unit e := returnm tt.
 Definition undefined_int {rv e} (_:unit) : monad rv Z e := returnm (0:ii).
 (*val undefined_vector : forall 'rv 'a 'e. integer -> 'a -> monad 'rv (list 'a) 'e*)
-Definition undefined_vector {rv a e} len (u : a) `{ArithFact (len >= 0)} : monad rv (vec a len) e := returnm (vec_init u len).
+Definition undefined_vector {rv a e} len (u : a) `{ArithFact (len >=? 0)} : monad rv (vec a len) e := returnm (vec_init u len).
 (*val undefined_bitvector : forall 'rv 'a 'e. Bitvector 'a => integer -> monad 'rv 'a 'e*)
-Definition undefined_bitvector {rv e} len `{ArithFact (len >= 0)} : monad rv (mword len) e := returnm (mword_of_int 0).
+Definition undefined_bitvector {rv e} len `{ArithFact (len >=? 0)} : monad rv (mword len) e := returnm (mword_of_int 0).
 (*val undefined_bits : forall 'rv 'a 'e. Bitvector 'a => integer -> monad 'rv 'a 'e*)
 Definition undefined_bits {rv e} := @undefined_bitvector rv e.
 Definition undefined_bit {rv e} (_:unit) : monad rv bitU e := returnm BU.
 (*Definition undefined_real {rv e} (_:unit) : monad rv real e := returnm (realFromFrac 0 1).*)
-Definition undefined_range {rv e} i j `{ArithFact (i <= j)} : monad rv {z : Z & ArithFact (i <= z /\ z <= j)} e := returnm (build_ex i).
+Definition undefined_range {rv e} i j `{ArithFact (i <=? j)} : monad rv {z : Z & ArithFact (i <=? z <=? j)} e := returnm (build_ex i).
 Definition undefined_atom {rv e} i : monad rv Z e := returnm i.
 Definition undefined_nat {rv e} (_:unit) : monad rv Z e := returnm (0:ii).
 
@@ -117,10 +117,11 @@ Definition eq_bit (x : bitU) (y : bitU) : bool :=
   end.
 
 Require Import Zeuclid.
-Definition euclid_modulo (m n : Z) `{ArithFact (n > 0)} : {z : Z & ArithFact (0 <= z <= n-1)}.
+Definition euclid_modulo (m n : Z) `{ArithFact (n >? 0)} : {z : Z & ArithFact (0 <=? z <=? n-1)}.
 refine (existT _ (ZEuclid.modulo m n) _).
 constructor.
 destruct H.
+unbool_comparisons; unbool_comparisons_goal.
 assert (Z.abs n = n). { rewrite Z.abs_eq; auto with zarith. }
 rewrite <- H at 3.
 lapply (ZEuclid.mod_always_pos m n); omega.
