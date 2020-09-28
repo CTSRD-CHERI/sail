@@ -1,6 +1,7 @@
 Require Import Sail.Base.
 Require Import String.
 Require Import List.
+Require Import Lia.
 Import List.ListNotations.
 Open Scope Z.
 
@@ -121,7 +122,7 @@ destruct H.
 unbool_comparisons; unbool_comparisons_goal.
 assert (Z.abs n = n). { rewrite Z.abs_eq; auto with zarith. }
 rewrite <- H at 3.
-lapply (ZEuclid.mod_always_pos m n); omega.
+lapply (ZEuclid.mod_always_pos m n); lia.
 Qed.
 
 (* Override the more general version *)
@@ -161,7 +162,7 @@ Lemma getCapOffset_lemma {x0 x1 x2 x : Z} :
  0 <= x <= 18446744073709551616 - 1.
 intros.
 match goal with H:context [ZEuclid.modulo ?X ?Y] |- _ => pose proof (ZEuclid.mod_always_pos X Y) end.
-omega with Z.
+lia.
 Qed.
 Hint Resolve getCapOffset_lemma : sail.
 
