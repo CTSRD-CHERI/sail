@@ -691,6 +691,18 @@ function setCapFlags(cap, flags) = cap
 val isSentryCap : Capability -> bool
 function isSentryCap (cap) = signed(cap.otype) == otype_sentry
 
+/*!
+Returns true if, for a given capability, a given address is greater than or
+equal to its lower bound and at least a given number of bytes from its
+upper bound. Note that this function returns true when the address is equal to
+the upper bound and the number of bytes is 0.
+*/
+val capHasSpace: (Capability, nat, nat) -> bool
+function capHasSpace(cap, addr, size) = {
+  let (base, top) = getCapBounds(cap);
+  (addr >= base) & ((addr + size) <= top)
+}
+
 function ERETHook() : unit -> unit =
   {
     let epcc_val = if (CP0Status.ERL() == bitone) then ErrorEPCC else EPCC;

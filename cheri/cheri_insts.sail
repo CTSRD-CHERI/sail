@@ -119,6 +119,16 @@ function clause execute (CGetAndAddr(rd, cb, rs)) =
   wGPR(rd) = capVal.address & rs_val;
 }
 
+union clause ast = CHasSpace : (regno, regno, regno)
+function clause execute (CHasSpace(rd, cb, rs)) =
+{
+  checkCP2usable();
+  let cb_val = readCapReg(cb);
+  let cb_cursor = getCapCursor(cb_val);
+  let rs_val = unsigned(rGPR(rs));
+  wGPR(rd) = zero_extend(capHasSpace(cb_val, cb_cursor, rs_val))
+}
+
 union clause ast = CGetPCC : regno
 function clause execute (CGetPCC(cd)) =
 {
@@ -1610,6 +1620,9 @@ function clause decode (0b010010 @ 0b00000 @ rt : IntRegEnc @ rs : IntRegEnc @  
 function clause assembly (CRAM(rt, rs)) = "cram " ^ strRRArgs(rt, rs)
 
 /* Three operand */
+
+/* Capability Inspection */
+function clause decode (0b010010 @ 0b00000 @ rd : IntRegEnc @ cb : CapRegEnc @ rs : IntRegEnc @ 0b100101) = Some(CHasSpace(rd, cb, rs))
 
 /* Capability Modification */
 function clause decode (0b010010 @ 0b00000 @ cd : CapRegEnc @ cs : CapRegEnc @ ct : CapRegEnc @ 0b001011) = Some(CSeal(cd, cs, ct))
