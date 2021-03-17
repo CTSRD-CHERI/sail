@@ -140,7 +140,8 @@ cheri128.v cheri128_types.v: $(CHERI128_SAILS) $(CHERI_SAIL_DIR)/cheri_terminati
 
 CHERI_COQ = cheri_types.v mips_extras.v cheri.v
 CHERI128_COQ = cheri128_types.v mips_extras.v cheri128.v
-COQ_LIBS = -R $(SAIL_DIR)/../bbv/theories bbv -R $(SAIL_DIR)/lib/coq Sail -R ../mips ''
+#COQ_LIBS = -Q $(SAIL_DIR)/../bbv/theories bbv -Q $(SAIL_DIR)/lib/coq Sail -R ../mips ''
+COQ_LIBS = -R ../mips ''
 
 %.vo: %.v
 	coqc $(COQ_LIBS) $<
